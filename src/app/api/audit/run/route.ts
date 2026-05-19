@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { crawlWebsite } from '@/lib/crawler';
 import { runSpeedAudit } from '@/lib/lighthouse';
 import { generateAuditReport } from '@/lib/ai';
