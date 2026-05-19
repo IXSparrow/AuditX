@@ -132,3 +132,4 @@ Open [http://localhost:3000](http://localhost:3000) inside your browser.
    - Uses caching in Next.js Server Components to minimize database roundtrips.
    - Employs async trigger-worker handlers for crawls, preventing API request timeouts.
    - Features responsive loading skeletons to maintain UI fluidity during background audits.
+# AuditX
