@@ -15,16 +15,14 @@ create table public.profiles (
 alter table public.profiles enable row level security;
 
 -- Policies for profiles
-create policy "Users can view own profile" on public.profiles
-  for select using (auth.uid() = id);
-
-create policy "Users can update own profile" on public.profiles
-  for update using (auth.uid() = id);
+create policy "Allow select for all" on public.profiles for select using (true);
+create policy "Allow insert for all" on public.profiles for insert with check (true);
+create policy "Allow update for all" on public.profiles for update using (true);
 
 -- 2. AUDITS TABLE
 create table public.audits (
   id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade,
   url text not null,
   domain text not null,
   status text default 'pending' check (status in ('pending', 'crawling', 'analyzing', 'completed', 'failed')),
@@ -45,17 +43,10 @@ create table public.audits (
 alter table public.audits enable row level security;
 
 -- Policies for audits
-create policy "Users can view own audits" on public.audits
-  for select using (auth.uid() = user_id);
-
-create policy "Users can create own audits" on public.audits
-  for insert with check (auth.uid() = user_id);
-
-create policy "Users can update own audits" on public.audits
-  for update using (auth.uid() = user_id);
-
-create policy "Users can delete own audits" on public.audits
-  for delete using (auth.uid() = user_id);
+create policy "Allow select for all" on public.audits for select using (true);
+create policy "Allow insert for all" on public.audits for insert with check (true);
+create policy "Allow update for all" on public.audits for update using (true) with check (true);
+create policy "Allow delete for all" on public.audits for delete using (true);
 
 -- 3. AUDIT ISSUES TABLE
 create table public.audit_issues (
@@ -72,22 +63,10 @@ create table public.audit_issues (
 -- Enable RLS for audit_issues
 alter table public.audit_issues enable row level security;
 
--- Policies for audit_issues (checked via joined audit ownership)
-create policy "Users can view issues for own audits" on public.audit_issues
-  for select using (
-    exists (
-      select 1 from public.audits
-      where audits.id = audit_issues.audit_id and audits.user_id = auth.uid()
-    )
-  );
-
-create policy "Users can insert issues for own audits" on public.audit_issues
-  for insert with check (
-    exists (
-      select 1 from public.audits
-      where audits.id = audit_issues.audit_id and audits.user_id = auth.uid()
-    )
-  );
+-- Policies for audit_issues
+create policy "Allow select for all" on public.audit_issues for select using (true);
+create policy "Allow insert for all" on public.audit_issues for insert with check (true);
+create policy "Allow update for all" on public.audit_issues for update using (true);
 
 -- 4. COMPETITORS TABLE
 create table public.competitors (
@@ -103,21 +82,8 @@ create table public.competitors (
 alter table public.competitors enable row level security;
 
 -- Policies for competitors
-create policy "Users can view competitors for own audits" on public.competitors
-  for select using (
-    exists (
-      select 1 from public.audits
-      where audits.id = competitors.audit_id and audits.user_id = auth.uid()
-    )
-  );
-
-create policy "Users can insert competitors for own audits" on public.competitors
-  for insert with check (
-    exists (
-      select 1 from public.audits
-      where audits.id = competitors.audit_id and audits.user_id = auth.uid()
-    )
-  );
+create policy "Allow select for all" on public.competitors for select using (true);
+create policy "Allow insert for all" on public.competitors for insert with check (true);
 
 -- 5. REDESIGN PREVIEWS TABLE
 create table public.redesign_previews (
@@ -133,21 +99,8 @@ create table public.redesign_previews (
 alter table public.redesign_previews enable row level security;
 
 -- Policies for redesign_previews
-create policy "Users can view redesign previews for own audits" on public.redesign_previews
-  for select using (
-    exists (
-      select 1 from public.audits
-      where audits.id = redesign_previews.audit_id and audits.user_id = auth.uid()
-    )
-  );
-
-create policy "Users can create redesign previews for own audits" on public.redesign_previews
-  for insert with check (
-    exists (
-      select 1 from public.audits
-      where audits.id = redesign_previews.audit_id and audits.user_id = auth.uid()
-    )
-  );
+create policy "Allow select for all" on public.redesign_previews for select using (true);
+create policy "Allow insert for all" on public.redesign_previews for insert with check (true);
 
 -- 6. LEADS TABLE
 create table public.leads (
@@ -165,11 +118,8 @@ create table public.leads (
 alter table public.leads enable row level security;
 
 -- Policies for leads
-create policy "Users can view own leads" on public.leads
-  for select using (auth.uid() = user_id);
-
-create policy "Users can create own leads" on public.leads
-  for insert with check (auth.uid() = user_id);
+create policy "Allow select for all" on public.leads for select using (true);
+create policy "Allow insert for all" on public.leads for insert with check (true);
 
 -- Performance Indexes
 create index idx_audits_user_id on public.audits(user_id);

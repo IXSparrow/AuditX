@@ -47,7 +47,8 @@ function NewAuditContent() {
 
       if (!response.ok) {
         const errJson = await response.json();
-        throw new Error(errJson.error || "Failed to initialize audit workspace.");
+        console.error("[Supabase Database Error Details]:", errJson.details);
+        throw new Error(errJson.details || errJson.error || "Failed to initialize audit workspace.");
       }
 
       const data = await response.json();
