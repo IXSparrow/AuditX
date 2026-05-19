@@ -1,19 +1,18 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
 
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized user access.' }, { status: 401 });
-    // }
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized user access.' }, { status: 401 });
+    }
 
     const { id } = params;
 
@@ -26,7 +25,7 @@ export async function GET(
       .from('audits')
       .select('*')
       .eq('id', id)
-      // .eq('user_id', session.user.id)
+      .eq('user_id', session.user.id)
       .single();
 
     if (fetchError || !audit) {

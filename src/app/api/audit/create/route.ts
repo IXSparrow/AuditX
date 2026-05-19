@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export async function POST(req: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
 
-    // if (!session) {
-    //   return NextResponse.json({ error: 'Unauthorized user access.' }, { status: 401 });
-    // }
-    const userId = session?.user?.id || '00000000-0000-0000-0000-000000000000';
+    if (!session) {
+      console.log("SESSION CHECK FAILED: No active session found.");
+      return NextResponse.json({ error: 'Unauthorized user access.' }, { status: 401 });
+    }
 
     const { url } = await req.json();
 
@@ -45,11 +44,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Restricted URL target.' }, { status: 400 });
     }
 
-    // 1. Create a pending audit row in database using admin client (to secure bypass or use direct user insertion)
+    console.log("CREATING AUDIT FOR USER:", session.user.id, "URL:", targetUrl);
+
+    // 1. Create a pending audit row in database using admin client
     const { data: audit, error: insertError } = await supabaseAdmin
       .from('audits')
       .insert({
-        user_id: userId,
+        user_id: session.user.id,
         url: targetUrl,
         domain: domain,
         status: 'pending',
@@ -66,7 +67,10 @@ export async function POST(req: Request) {
 
     if (insertError || !audit) {
       console.error("Database insert error:", insertError);
-      return NextResponse.json({ error: 'Failed to initialize audit database entry.' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Failed to initialize audit database entry.',
+        details: insertError?.message 
+      }, { status: 500 });
     }
 
     // 2. Trigger the pipeline asynchronously via absolute internal URL execution
