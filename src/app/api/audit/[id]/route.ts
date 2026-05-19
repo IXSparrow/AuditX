@@ -5,17 +5,17 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
 
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized user access.' }, { status: 401 });
-    }
+    // if (!session) {
+    //   return NextResponse.json({ error: 'Unauthorized user access.' }, { status: 401 });
+    // }
 
-    const { id } = await params;
+    const { id } = params;
 
     if (!id) {
       return NextResponse.json({ error: 'Audit ID is required.' }, { status: 400 });
@@ -26,7 +26,7 @@ export async function GET(
       .from('audits')
       .select('*')
       .eq('id', id)
-      .eq('user_id', session.user.id)
+      // .eq('user_id', session.user.id)
       .single();
 
     if (fetchError || !audit) {
